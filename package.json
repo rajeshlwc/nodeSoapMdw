@@ -1,0 +1,15 @@
+{
+  "name": "nodesoapmdw",
+  "version": "1.0.0",
+  "description": "client to call SOAP web service and get response",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "rajesh ramachandran",
+  "license": "ISC",
+  "dependencies": {
+    "jsforce": "^1.11.0",
+    "soap": "^0.43.0"
+  }
+}
