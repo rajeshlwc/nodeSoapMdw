@@ -22,7 +22,7 @@ var conn = new jsforce.Connection({});
 conn.login(user,password,function(err, userInfo){
     if (err) {return console.log(err);}
     console.log("login successful");
-    //get replay Id 
+    //get replay Id by querying interface tracker object
     conn.query("select Id,Last_Replay_Id__c from Integration_Tracker__c where name = '" + interfaceName + "' limit 1", function(err, result){
         if (err){return console.error(err);}
         if (result.records){
@@ -40,14 +40,13 @@ conn.login(user,password,function(err, userInfo){
                 )
             ]);
             console.log("client created" + client);
-
+            //subscribe to platform event to listen to events getting published
             var subscription = client.subscribe(channel, function(message){
                 console.log(message.event.replayId);
                 console.log(message.payload.Message__c);
                 var CelciusObj = message.payload.Message__c;
                 console.log(typeof(CelciusObj));
-               // var requestArgs =  {Celsius: JSON.stringify(CelciusObj.Celcius)};
-               // console.log(requestArgs);
+  
                 //call webservice with received message
                 soap.createClient(url,{endpoint: 'https://www.w3schools.com/xml/tempconvert.asmx'},function(err,client){
                     console.log("client created");
@@ -65,11 +64,11 @@ conn.login(user,password,function(err, userInfo){
                 
                             var res = result.CelsiusToFahrenheitResult;
                             console.log(res); 
-                            
+                            //use the response from the SOAP web service to publish a response Platform event
                             conn.sobject(responsechannel).create({ResponseMessage__c : res, RequestReplayId__c : message.event.replayId},function(err,ret){
                                 console.log("record created " + ret.success);
                             });
-
+                            //update processed replay id on integration tracker
                             conn.sobject("Integration_Tracker__c").update({Id: integTrackerId,Last_Replay_Id__c: message.event.replayId},function(err, rec){
                                 if (err || !rec.success) {return console.error(err,rec);}
                                 console.log("tracker updated");
